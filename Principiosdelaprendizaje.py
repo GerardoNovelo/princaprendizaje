@@ -1,10 +1,10 @@
 import streamlit as st
 
-# Título y descripción
+# Título de la app
 st.title("🧠 Quiz: Principios del Aprendizaje")
-st.write("Contesta cada pregunta. Solo podrás avanzar si eliges la opción correcta. ¡Buena suerte!")
+st.write("Responde cada pregunta. Solo podrás avanzar si eliges la opción correcta.")
 
-# Lista de preguntas, opciones, retroalimentaciones y respuesta correcta
+# Lista de preguntas
 quiz = [
     {
         "pregunta": "¿Cuál de los siguientes principios es fundamental para que el aprendizaje sea significativo?",
@@ -98,13 +98,15 @@ quiz = [
     }
 ]
 
-# Estado inicial
+# Estado de la sesión
 if 'pregunta_actual' not in st.session_state:
     st.session_state.pregunta_actual = 0
-if 'respuesta_correcta' not in st.session_state:
-    st.session_state.respuesta_correcta = False
+if 'retro' not in st.session_state:
+    st.session_state.retro = ""
+if 'mostrar_siguiente' not in st.session_state:
+    st.session_state.mostrar_siguiente = False
 
-# Mostrar la pregunta actual
+# Pregunta actual
 index = st.session_state.pregunta_actual
 
 if index < len(quiz):
@@ -112,21 +114,24 @@ if index < len(quiz):
     st.subheader(f"Pregunta {index + 1} de {len(quiz)}")
     st.write(pregunta["pregunta"])
 
-    opciones_texto = [op[0] for op in pregunta["opciones"]]
-    seleccion = st.radio("Selecciona una opción:", opciones_texto, key=f"pregunta_{index}")
+    # Crear clave única para evitar interferencias
+    seleccion = st.radio("Selecciona una opción:", [op[0] for op in pregunta["opciones"]], key=f"radio_{index}")
 
-    if st.button("Responder", key=f"boton_{index}"):
-        for opcion_texto, retro in pregunta["opciones"]:
-            if seleccion == opcion_texto:
-                st.info(retro)
-                st.session_state.respuesta_correcta = (seleccion == pregunta["correcta"])
+    if st.button("Responder", key=f"responder_{index}"):
+        for texto, retro in pregunta["opciones"]:
+            if seleccion == texto:
+                st.session_state.retro = retro
+                st.session_state.mostrar_siguiente = (texto == pregunta["correcta"])
                 break
 
-    # Mostrar botón para avanzar solo si respondió correctamente
-    if st.session_state.respuesta_correcta:
+    if st.session_state.retro:
+        st.info(st.session_state.retro)
+
+    if st.session_state.mostrar_siguiente:
         if st.button("Siguiente", key=f"siguiente_{index}"):
             st.session_state.pregunta_actual += 1
-            st.session_state.respuesta_correcta = False
+            st.session_state.retro = ""
+            st.session_state.mostrar_siguiente = False
             st.experimental_rerun()
 else:
     st.success("🎉 ¡Felicidades! Has completado todas las preguntas del quiz sobre los principios del aprendizaje.")
